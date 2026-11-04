@@ -1,12 +1,15 @@
 <?php
 namespace Clases;
 class Soporte{
+    public static int $contador = 0;
     private static $IVA = 21;
     public function __construct(
         public string   $titulo,
         protected int   $numero,
         protected float $precio
-    ){}
+    ){
+        self::$contador++;
+    }
 
     public function getNumero(): int
     {

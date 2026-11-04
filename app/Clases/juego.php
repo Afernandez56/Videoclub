@@ -2,6 +2,7 @@
 namespace Clases;
 
 class Juego extends Soporte {
+    public static int $contador = 0;
     public function __construct(
         string $titulo,
         int $numero,
@@ -12,6 +13,7 @@ class Juego extends Soporte {
     )
     {
         parent::__construct($titulo, $numero, $precio);
+        self::$contador++;
     }
 
     function muestraResumen() : string{
@@ -23,7 +25,7 @@ class Juego extends Soporte {
         }else if ($this->minNumJugadores ==1 && $this->maxNumJugadores == 1){
             return "Para un jugador";
         }else if ($this->minNumJugadores == $this->maxNumJugadores && $this->maxNumJugadores > 1){
-            return "Para ".$this->minNumJugadores. "jugadores";
+            return "Para ".$this->minNumJugadores. " jugadores";
         }
 
     }
