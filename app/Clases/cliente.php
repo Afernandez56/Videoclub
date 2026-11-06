@@ -72,4 +72,6 @@ public function listaAlquileres() : void {
         }
 }
 
+
+
 }
