@@ -1,18 +1,18 @@
 <?php
 namespace Clases;
 
-class Cliente {
-    public static int $contador = 0;
+class Cliente implements Resumible {
+    /** @param Soporte[] $soportesAlquilados */
+    protected array $soportesAlquilados = [];
+    protected int $numSoportesAlquilados = 0;
+
     public function __construct(
         protected string $nombre,
         protected int $numero,
-        /** @param Soporte[] $soportesAlquilados */
-        protected array $soportesAlquilados = [],
-        protected int $numSoportesAlquilados = 0,
         protected ?int $maxAlquilerConcurrente = 3
     )
     {
-        self::$contador = 0;
+
     }
 
     public function getNumSoportesAlquilados(): int
@@ -44,7 +44,8 @@ class Cliente {
             return false;
         }else{
             if (count($this->soportesAlquilados)<$this->maxAlquilerConcurrente) {
-                array_push($this->soportesAlquilados, $s);
+                $this->soportesAlquilados [] = $s;
+                $this->numSoportesAlquilados++;
                 echo "El soporte se acaba de alquilar <br>";
                 return true;
             }else{
@@ -57,7 +58,8 @@ class Cliente {
 
     public function devolver(int $numSoporte): bool {
         if ($numSoporte < $this->getNumSoportesAlquilados() && $numSoporte >= 0) {
-            unset($this->soportesAlquilados[$numSoporte]);
+            array_splice($this->soportesAlquilados, $numSoporte, 1);
+            $this->numSoportesAlquilados--;
             echo "El soporte ha sido devuelto con éxito<br>";
             return true;
         }else{

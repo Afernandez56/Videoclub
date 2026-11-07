@@ -1,14 +1,14 @@
 <?php
 namespace Clases;
-class Soporte{
-    public static int $contador = 0;
+abstract class Soporte implements Resumible {
+
     private static $IVA = 21;
     public function __construct(
         public string   $titulo,
         protected int   $numero,
         protected float $precio
     ){
-        self::$contador++;
+
     }
 
     public function getNumero(): int
@@ -28,7 +28,7 @@ class Soporte{
     }
 
     public function muestraResumen() : string{
-        return "El producto ".$this->titulo."con numero ".$this->getNumero()." tiene un precio con IVA de: ".$this->getPrecioConIva();
+        return "El producto ".$this->titulo." con numero ".$this->getNumero()." tiene un precio con IVA de: ".$this->getPrecioConIva();
     }
 }
 

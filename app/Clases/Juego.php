@@ -2,7 +2,7 @@
 namespace Clases;
 
 class Juego extends Soporte {
-    public static int $contador = 0;
+
     public function __construct(
         string $titulo,
         int $numero,
@@ -13,11 +13,12 @@ class Juego extends Soporte {
     )
     {
         parent::__construct($titulo, $numero, $precio);
-        self::$contador++;
+
     }
 
     function muestraResumen() : string{
-        return "El juego ".$this->titulo."para la consola ".$this->consola." tiene un precio con IVA de: ".$this->getPrecioConIva();
+        return "Juego para: " . $this->consola . "<br>" . parent::muestraResumen()
+            . "<br>" . $this->muestraJugadoresPosibles();
     }
     function muestraJugadoresPosibles() : string {
         if ($this->minNumJugadores != $this->maxNumJugadores){
