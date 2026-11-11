@@ -1,10 +1,19 @@
 <?php
 namespace Clases;
 
+use Util\CupoSuperadoException;
+use Util\SoporteNoEncontradoException;
+use Util\SoporteYaAlquiladoException;
+
 class Cliente implements Resumible {
     /** @param Soporte[] $soportesAlquilados */
     protected array $soportesAlquilados = [];
     protected int $numSoportesAlquilados = 0;
+
+    public function getMaxAlquilerConcurrente(): ?int
+    {
+        return $this->maxAlquilerConcurrente;
+    }
 
     public function __construct(
         protected string $nombre,
@@ -37,17 +46,16 @@ class Cliente implements Resumible {
 
     public function alquilar(Soporte $s): bool {
         if ($this->tieneAlquilado($s)) {
-            echo "<br>El cliente ya tiene alquilado el soporte: " . $s->titulo;
-            return false;
+            throw new SoporteYaAlquiladoException("El cliente ya tiene alquilado el soporte");
         }
         if ($this->numSoportesAlquilados >= $this->maxAlquilerConcurrente) {
-            echo "<br>El cliente ha alcanzado el cupo máximo de alquileres.";
-            return false;
+            throw new CupoSuperadoException("El cupo ha sido superado");
         }
 
         $this->soportesAlquilados[] = $s;
         $this->numSoportesAlquilados++;
         echo "<br>Soporte alquilado correctamente a " . $this->nombre . ": " . $s->titulo;
+        $s->alquilado = true;
         return true;
     }
 
@@ -57,12 +65,12 @@ class Cliente implements Resumible {
                 unset($this->soportesAlquilados[$key]);
                 $this->soportesAlquilados = array_values($this->soportesAlquilados);
                 $this->numSoportesAlquilados--;
+                $soporte->alquilado = false;
                 echo "<br>Soporte devuelto correctamente.";
                 return true;
             }
         }
-        echo "<br>No se ha podido encontrar el soporte en los alquileres del cliente.";
-        return false;
+        throw new SoporteNoEncontradoException ("Soporte no encontrado");
 }
 public function listaAlquileres() : void {
         echo $this->nombre." tienes ".$this->numSoportesAlquilados." soportes alquilados <br>";

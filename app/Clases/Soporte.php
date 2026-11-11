@@ -2,6 +2,7 @@
 namespace Clases;
 abstract class Soporte implements Resumible {
 
+    public bool $alquilado = false;
     private static $IVA = 21;
     public function __construct(
         public string   $titulo,

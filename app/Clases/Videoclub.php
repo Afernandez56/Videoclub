@@ -1,56 +1,82 @@
 <?php
 namespace Clases;
+use Util\VideoClubException;
+
 include_once "autoload.php";
-class Videoclub{
+class Videoclub
+{
     /** @param Soporte[] $productos */
     protected array $productos = [];
     protected int $numProductos = 0;
-        /** @param Cliente[] $socios */
-        protected array $socios = [];
-        protected int $numSocios = 0;
+    /** @param Cliente[] $socios */
+    protected array $socios = [];
+    protected int $numSocios = 0;
+    protected int $numProductosAlquilados = 0;
+    protected int $numTotalAlquileres = 0;
+
+    public function getNumTotalAlquileres(): int
+    {
+        return $this->numTotalAlquileres;
+    }
+
+    public function getNumProductosAlquilados(): int
+    {
+        return $this->numProductosAlquilados;
+    }
+
     public function __construct(
         protected string $nombre,
 
-    ){}
+    )
+    {
+    }
 
-    private function incluirProducto (Soporte $producto) : bool{
+    private function incluirProducto(Soporte $producto): bool
+    {
 
-            $this->productos[] = $producto;
-            $this->numProductos++;
-            echo "Producto incluido: ".$producto->titulo."<br>";
-            return true;
+        $this->productos[] = $producto;
+        $this->numProductos++;
+        echo "Producto incluido: " . $producto->titulo . "<br>";
+        return true;
 
     }
-    public function incluirCintaVideo (string $titulo, float  $precio, int $duracion) : bool{
+
+    public function incluirCintaVideo(string $titulo, float $precio, int $duracion): bool
+    {
         $nuevaCinta = new CintaVideo($titulo, $this->numProductos, $precio, $duracion);
         return $this->incluirProducto($nuevaCinta);
     }
 
-    public function incluirDvd (string $titulo, float $precio, string $idiomas, string $pantalla) : bool{
-        $nuevoDvd = new Dvd($titulo, $this->numProductos,$precio, $idiomas, $pantalla);
+    public function incluirDvd(string $titulo, float $precio, string $idiomas, string $pantalla): bool
+    {
+        $nuevoDvd = new Dvd($titulo, $this->numProductos, $precio, $idiomas, $pantalla);
         return $this->incluirProducto($nuevoDvd);
     }
 
-    public function incluirJuego(string $titulo, float $precio, string $consola, int $minNumJugadores, int $maxNumJugadores) : bool{
-        $nuevoJuego = new Juego($titulo, $this->numProductos,$precio, $consola, $minNumJugadores, $maxNumJugadores);
-       return $this->incluirProducto($nuevoJuego);
+    public function incluirJuego(string $titulo, float $precio, string $consola, int $minNumJugadores, int $maxNumJugadores): bool
+    {
+        $nuevoJuego = new Juego($titulo, $this->numProductos, $precio, $consola, $minNumJugadores, $maxNumJugadores);
+        return $this->incluirProducto($nuevoJuego);
     }
 
-    public function incluirSocio (string $nombre, int $numeroMaxAlquileres = 3) : void{
+    public function incluirSocio(string $nombre, int $numeroMaxAlquileres = 3): void
+    {
         $nuevoSocio = new Cliente($nombre, $this->numSocios, $numeroMaxAlquileres);
         $this->socios[] = $nuevoSocio;
         $this->numSocios++;
     }
 
-    public function listarProductos() : void{
-        foreach ($this->productos as $producto){
-            echo "<br>". $producto->muestraResumen() ;
+    public function listarProductos(): void
+    {
+        foreach ($this->productos as $producto) {
+            echo "<br>" . $producto->muestraResumen();
         }
     }
 
-    public function listarSocios() : void{
-        foreach ($this->socios as $socio){
-            echo "<br>".$socio->muestraResumen();
+    public function listarSocios(): void
+    {
+        foreach ($this->socios as $socio) {
+            echo "<br>" . $socio->muestraResumen();
         }
     }
 
@@ -75,9 +101,64 @@ class Videoclub{
         }
 
         if ($clienteEncontrado !== null && $soporteEncontrado !== null) {
-            $clienteEncontrado->alquilar($soporteEncontrado);
+            try {
+                $clienteEncontrado->alquilar($soporteEncontrado);
+            } catch (VideoClubException $e) {
+                echo $e->getMessage();
+            }
+
         } else {
             echo "<br>No se ha encontrado el cliente o el soporte.";
+        }
+    }
+
+    public function alquilaSocioProductos(int $numeroCliente, array $numerosProductos): void
+    {
+
+        $clienteEncontrado = null;
+        $puedeAlquilarTodos = true;
+        $productosAlquilables = [];
+        foreach ($this->socios as $socio) {
+            if ($socio->getNumero() === $numeroCliente) {
+                $clienteEncontrado = $socio;
+                break;
+            }
+        }
+
+        if ($clienteEncontrado !== null) {
+
+            if(($clienteEncontrado -> getMaxAlquilerConcurrente() - $clienteEncontrado -> getNumSoportesAlquilados()) < (count($numerosProductos))) {
+                $puedeAlquilarTodos = false;
+            }else{
+                $encontrado = false;
+                foreach ($numerosProductos as $numeroProducto) {
+                    $encontrado = false;
+                foreach ($this->productos as $producto) {
+                    if ($producto->getNumero() === $numeroProducto) {
+                        $soporteEncontrado = $producto;
+                        $encontrado = true;
+                        if ($soporteEncontrado -> alquilado) {
+                            $puedeAlquilarTodos = false;
+                            break;
+                        }else{
+                        $productosAlquilables[] = $soporteEncontrado;
+                        }
+                    }
+                }
+
+                if (!$encontrado) {
+                    $puedeAlquilarTodos = false;
+                }
+            }
+            }
+
+        }
+        if ($puedeAlquilarTodos) {
+            foreach($productosAlquilables as $producto){
+                $clienteEncontrado -> alquilar($producto);
+                $this->numProductosAlquilados++;
+            }
+            $this->numTotalAlquileres++;
         }
     }
 }
