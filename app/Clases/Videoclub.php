@@ -1,11 +1,6 @@
 <?php
 namespace Clases;
-include_once "Resumible.php";
-include_once "Soporte.php";
-include_once "CintaVideo.php";
-include_once "Dvd.php";
-include_once "Juego.php";
-include_once "Cliente.php";
+include_once "autoload.php";
 class Videoclub{
     /** @param Soporte[] $productos */
     protected array $productos = [];
@@ -49,25 +44,40 @@ class Videoclub{
 
     public function listarProductos() : void{
         foreach ($this->productos as $producto){
-            echo $producto->muestraResumen() ."<br>";
+            echo "<br>". $producto->muestraResumen() ;
         }
     }
 
     public function listarSocios() : void{
         foreach ($this->socios as $socio){
-            echo $socio->muestraResumen() ."<br>";
+            echo "<br>".$socio->muestraResumen();
         }
     }
 
-    public function alquilaSocioProducto(int $numeroCliente, int $numSoporte): bool {
+    public function alquilaSocioProducto(int $numeroCliente, int $numSoporte)
+    {
 
-        $socio = $this->socios[$numeroCliente] ?? null;
-        $soporte = $this->productos[$numSoporte] ?? null;
-        if ($socio === null || $soporte === null) {
-            echo "No se ha podido alquilar el producto <br>";
-            return false;
+        $clienteEncontrado = null;
+        $soporteEncontrado = null;
+
+        foreach ($this->socios as $socio) {
+            if ($socio->getNumero() === $numeroCliente) {
+                $clienteEncontrado = $socio;
+                break;
+            }
         }
-        return $socio->alquilar($soporte);
 
+        foreach ($this->productos as $producto) {
+            if ($producto->getNumero() === $numSoporte) {
+                $soporteEncontrado = $producto;
+                break;
+            }
+        }
+
+        if ($clienteEncontrado !== null && $soporteEncontrado !== null) {
+            $clienteEncontrado->alquilar($soporteEncontrado);
+        } else {
+            echo "<br>No se ha encontrado el cliente o el soporte.";
+        }
     }
 }

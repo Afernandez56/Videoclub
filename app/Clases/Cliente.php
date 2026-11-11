@@ -11,23 +11,15 @@ class Cliente implements Resumible {
         protected int $numero,
         protected ?int $maxAlquilerConcurrente = 3
     )
-    {
-
-    }
+    {}
 
     public function getNumSoportesAlquilados(): int
     {
-        return count($this->soportesAlquilados);
+        return $this->numSoportesAlquilados;
     }
-
     public function getNumero(): int
     {
         return $this->numero;
-    }
-
-    public function setNumero(int $numero): void
-    {
-        $this->numero = $numero;
     }
 
     public function muestraResumen() : string{
@@ -35,40 +27,45 @@ class Cliente implements Resumible {
     }
 
     public function tieneAlquilado(Soporte $s): bool {
-        return (in_array($s, $this->soportesAlquilados));
+        foreach ($this->soportesAlquilados as $soporte) {
+            if ($soporte->getNumero() === $s->getNumero()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function alquilar(Soporte $s): bool {
-        if (in_array($s, $this->soportesAlquilados)) {
-            echo "El soporte ya esta alquilado<br>";
+        if ($this->tieneAlquilado($s)) {
+            echo "<br>El cliente ya tiene alquilado el soporte: " . $s->titulo;
             return false;
-        }else{
-            if (count($this->soportesAlquilados)<$this->maxAlquilerConcurrente) {
-                $this->soportesAlquilados [] = $s;
-                $this->numSoportesAlquilados++;
-                echo "El soporte se acaba de alquilar <br>";
-                return true;
-            }else{
-                echo "Has llegado al máximo de alquileres simultáneos <br>";
-                return false;
-            }
-
         }
+        if ($this->numSoportesAlquilados >= $this->maxAlquilerConcurrente) {
+            echo "<br>El cliente ha alcanzado el cupo máximo de alquileres.";
+            return false;
+        }
+
+        $this->soportesAlquilados[] = $s;
+        $this->numSoportesAlquilados++;
+        echo "<br>Soporte alquilado correctamente a " . $this->nombre . ": " . $s->titulo;
+        return true;
     }
 
     public function devolver(int $numSoporte): bool {
-        if ($numSoporte < $this->getNumSoportesAlquilados() && $numSoporte >= 0) {
-            array_splice($this->soportesAlquilados, $numSoporte, 1);
-            $this->numSoportesAlquilados--;
-            echo "El soporte ha sido devuelto con éxito<br>";
-            return true;
-        }else{
-            echo "El soporte no se puede devolver <br>";
-            return false;
+        foreach ($this->soportesAlquilados as $key => $soporte) {
+            if ($soporte->getNumero() === $numSoporte) {
+                unset($this->soportesAlquilados[$key]);
+                $this->soportesAlquilados = array_values($this->soportesAlquilados);
+                $this->numSoportesAlquilados--;
+                echo "<br>Soporte devuelto correctamente.";
+                return true;
+            }
         }
+        echo "<br>No se ha podido encontrar el soporte en los alquileres del cliente.";
+        return false;
 }
 public function listaAlquileres() : void {
-        echo $this->nombre." tienes ".count($this->soportesAlquilados)." soportes alquilados <br>";
+        echo $this->nombre." tienes ".$this->numSoportesAlquilados." soportes alquilados <br>";
         foreach ($this->soportesAlquilados as $soporte) {
             echo $soporte->muestraResumen()."<br>";
         }
