@@ -114,51 +114,129 @@ class Videoclub
 
     public function alquilaSocioProductos(int $numeroCliente, array $numerosProductos): void
     {
-
         $clienteEncontrado = null;
-        $puedeAlquilarTodos = true;
         $productosAlquilables = [];
+
+        //busco al cliente
         foreach ($this->socios as $socio) {
             if ($socio->getNumero() === $numeroCliente) {
                 $clienteEncontrado = $socio;
                 break;
             }
         }
-
-        if ($clienteEncontrado !== null) {
-
+        if ($clienteEncontrado === null) {
+            echo "<br>No se ha encontrado el cliente";
+            return;
+        }
+            //veo si tiene espacio suficiente para alquilar los productos
             if(($clienteEncontrado -> getMaxAlquilerConcurrente() - $clienteEncontrado -> getNumSoportesAlquilados()) < (count($numerosProductos))) {
-                $puedeAlquilarTodos = false;
-            }else{
-                $encontrado = false;
+                return;
+            }
+            //recorro el array para comprobar que se pueden alquilar todos
                 foreach ($numerosProductos as $numeroProducto) {
                     $encontrado = false;
                 foreach ($this->productos as $producto) {
+                    //si el producto existe
                     if ($producto->getNumero() === $numeroProducto) {
                         $soporteEncontrado = $producto;
                         $encontrado = true;
+                        //si está alquilado
                         if ($soporteEncontrado -> alquilado) {
-                            $puedeAlquilarTodos = false;
-                            break;
-                        }else{
-                        $productosAlquilables[] = $soporteEncontrado;
+                            return;
+                            //no está alquilado
                         }
+                            $productosAlquilables[] = $soporteEncontrado;
+                            break;
                     }
                 }
 
                 if (!$encontrado) {
-                    $puedeAlquilarTodos = false;
+                    return;
                 }
             }
+                foreach($productosAlquilables as $producto){
+                    $clienteEncontrado -> alquilar($producto);
+                    $this->numProductosAlquilados++;
+                }
+                $this->numTotalAlquileres++;
+    }
+
+
+    function devolverSocioProducto(int $numeroCliente, int $numeroProducto): Videoclub {
+
+        $clienteEncontrado = null;
+        $soporteEncontrado = null;
+
+        foreach ($this->socios as $socio) {
+            if ($socio->getNumero() === $numeroCliente) {
+                $clienteEncontrado = $socio;
+                break;
             }
+        }
+        foreach ($this->productos as $producto) {
+            if ($producto->getNumero() === $numeroProducto) {
+                $soporteEncontrado = $producto;
+                break;
+            }
+        }
+        if ($clienteEncontrado !== null && $soporteEncontrado !== null) {
+            try{
+                $clienteEncontrado->devolver($soporteEncontrado);
+
+            }catch (VideoClubException $e){
+                echo $e->getMessage();
+            }
+        }else{
+            echo "<br>No se ha encontrado el cliente o el producto.";
 
         }
-        if ($puedeAlquilarTodos) {
-            foreach($productosAlquilables as $producto){
-                $clienteEncontrado -> alquilar($producto);
-                $this->numProductosAlquilados++;
+        return $this;
+    }
+
+    function devolverSocioProductos(int $numeroCliente, array $numerosProductos): void {
+        $clienteEncontrado = null;
+        $productosDevolver = [];
+
+        //busco al cliente
+        foreach ($this->socios as $socio) {
+            if ($socio->getNumero() === $numeroCliente) {
+                $clienteEncontrado = $socio;
+                break;
             }
-            $this->numTotalAlquileres++;
         }
+        if ($clienteEncontrado === null) {
+            echo "<br>No se ha encontrado el cliente";
+            return;
+        }
+        //veo si tiene espacio suficiente para devolver los productos
+        if(($clienteEncontrado -> getNumSoportesAlquilados()<(count($numerosProductos)))) {
+            return;
+        }
+        //recorro el array para comprobar que se pueden alquilar todos
+        foreach ($numerosProductos as $numeroProducto) {
+            $encontrado = false;
+            foreach ($this->productos as $producto) {
+                //si el producto existe
+                if ($producto->getNumero() === $numeroProducto) {
+                    $soporteEncontrado = $producto;
+                    $encontrado = true;
+                    //si no está alquilado
+                    if (!$soporteEncontrado -> alquilado || !in_array($soporteEncontrado, $clienteEncontrado->soportesAlquilados)) {
+                        return;
+                    }
+                    $productosDevolver[] = $soporteEncontrado;
+                    break;
+                }
+            }
+
+            if (!$encontrado) {
+                return;
+            }
+        }
+        foreach($productosDevolver as $producto){
+            $clienteEncontrado -> devolver($producto->getNumero());
+            $this->numProductosAlquilados--;
+        }
+        $this->numTotalAlquileres--;
     }
 }
